@@ -1,0 +1,90 @@
+<%- include("header") -%>
+
+<style>
+body, html {background: none;}
+.footer {position:static;};
+</style>
+
+<div class="box col-sm-12 col-md-10 col-lg-8 col-xl-6 centered" id="heading">
+  <h1>Travel with a <%= passport %> passport from <%= departure %> to <%= dest %>
+  <img src=<%= flagURL %> alt="Flag"></h1>
+</div>
+
+<!-- IF statement summary of travel -->
+<% if (travelBan) {%>
+  <div class="alert alert-danger col-sm-12 col-md-10 col-lg-8 col-xl-6 centered" role="alert">
+    <p>Bad news! It seems like you cannot travel from <%= departure %> to <%= dest %> with a <%= passport %> passport due to COVID-19
+  restrictions! There can be exceptions sometimes, like if you are a permanent resident of the destination country. Check the official links
+below if you believe exceptions could apply to you.</p>
+  <hr>
+  <p>Updated <%= date %></p>
+  </div>
+<% } else {%>
+    <div class="alert alert-success col-sm-12 col-md-10 col-lg-8 col-xl-6 centered" role="alert">
+      <p>Hooray! COVID-19 travel bans don't apply to you. You can travel from <%= departure %> to <%= dest %> with a <%= passport %> passport!
+    However, check the warnings and restrictions below, including visa requirements.</p>
+    <hr>
+    <p>Updated <%= date %></p>
+    </div>
+<% }; %>
+
+<% if (!travelBan) {%>
+<!-- Testing information -->
+<div class="alert alert-warning col-sm-12 col-md-10 col-lg-8 col-xl-6 centered" role="alert">
+  <h2>Testing information</h2>
+  <p><%= test_info %></p>
+</div>
+<!-- Information for all travelers -->
+<div class="alert alert-warning col-sm-12 col-md-10 col-lg-8 col-xl-6 centered" role="alert">
+  <h2>Information for all passengers traveling to <%= dest %></h2>
+  <p><%= information %></p>
+</div>
+<!-- Quarantine information -->
+<div class="alert alert-warning col-sm-12 col-md-10 col-lg-8 col-xl-6 centered" role="alert">
+  <h2>Quarantine information</h2>
+  <p><%= quarantine_info %></p>
+</div>
+<% if (passport !== dest) {%>
+<!-- Visa information -->
+<div class="alert alert-warning col-sm-12 col-md-10 col-lg-8 col-xl-6 centered" role="alert">
+  <h2>Visa information</h2>
+  <p>We do not provide visa information at this time. Please make sure to check that your visas are in order before traveling.</p>
+</div>
+<% }%>
+<% } else { %>
+
+<div class="alert alert-warning col-sm-12 col-md-10 col-lg-8 col-xl-6 centered" role="alert">
+  <h2>Possible exceptions that could apply to you</h2>
+  <p><%= exceptions %></p>
+</div>
+
+<% }; %>
+<!-- Government website links -->
+<div class="alert alert-primary col-sm-12 col-md-10 col-lg-8 col-xl-6 centered" role="alert">
+  For more information visit these official government websites:
+  <ul>
+    <% for (i = 0; i < urls.length; i++){ %>
+      <li><a href="<%= urls[i] %>" class="alert-link"><%= urls[i] %></a></li>
+    <% } %>
+  </ul>
+</div>
+
+<div class="alert alert-secondary col-sm-12 col-md-10 col-lg-8 col-xl-6 centered" role="alert">
+  <form class=" centered">
+    <h2>Be notified if anything changes
+      for travels <strong>to <%= dest %>:</strong></h2>
+    <div class="form-group">
+      <label for="exampleInputEmail1">Email address:</label>
+      <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
+      <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small>
+    </div>
+    <button type="submit" class="btn btn-primary submit">Keep me informed</button>
+  </form>
+</div>
+
+
+
+
+
+
+<%- include("footer") -%>

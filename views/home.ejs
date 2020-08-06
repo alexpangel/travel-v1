@@ -1,0 +1,37 @@
+<%- include("header") -%>
+
+
+
+<div class="container bg-pic">
+
+    <form class="centered col-sm-12 col-md-8 col-lg-6 col-xl-5" method="post" action="/">
+      <h1>Find out where you can travel!</h1>
+      <h2 class="date">Updated <%= date %></h2>
+      <div class="form-group">
+        <label for="passport">Your Passport</label>
+        <select class="form-control" id="passport" name="passport">
+          <option>---</option>
+          <% for (i = 0; i < world_countries.length; i++){ %>
+            <option><%= world_countries[i] %></option>
+          <% } %>
+        </select>
+        <label for="destination">Destination Country</label>
+        <select class="form-control" id="destination" name="destination">
+          <option>---</option>
+          <option>France</option>
+          <option>Canada</option>
+          <option>England</option>
+        </select>
+        <label for="departure">Departure Country</label>
+        <select class="form-control" id="departure" name="departure">
+          <option>---</option>
+          <% for (i = 0; i < world_countries.length; i++){ %>
+            <option><%= world_countries[i] %></option>
+          <% } %>
+        </select>
+      </div>
+      <button type="submit" name="button" class="btn btn-primary submit">Go</button>
+    </form>
+</div>
+
+<%- include("footer") -%>
