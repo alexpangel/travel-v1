@@ -9,16 +9,20 @@ mongoose.connect("mongodb+srv://admin-alex:5qmyiUYYx4ZuufwF@cluster0.3g1xz.mongo
 
 const countrySchema = mongoose.Schema({
   name: String,
-  links: Array,
-  citizens_accepted: Boolean,
   info: String,
-  no_restrictions: Array,
-  covid_test_to_board: Array,
-  covid_test_to_board_info: String,
-  covid_test_on_arrival: Array,
-  covid_test_on_arrival_info: String,
-  exceptions: String,
-  quarantine_info: String,
+  citizenship_whitelist: Array,
+  citizenship_blacklist: Array,
+  citizenship_message: String,
+  entry_whitelist: Array,
+  entry_blacklist: Array,
+  entry_message: String,
+  quarantine_whitelist: Array,
+  quarantine_blacklist: Array,
+  quarantine_message: String,
+  required_testing_whitelist: Array,
+  required_testing_blacklist: Array,
+  required_testing_message: String,
+  links: Array,
   flagURL: String
 })
 
@@ -43,20 +47,20 @@ let world_countries = ["Afghanistan", "Albania", "Algeria", "Andorra", "Angola",
 "Argentina","Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas",
 "Bahrain","Bangladesh","Barbados","Belarus","Belgium","Belize","Benin","Bhutan",
 "Bolivia","Bosnia and Herzegovina","Botswana","Brazil","Brunei","Bulgaria","Burkina Faso",
-"Burundi", "Côte d'Ivoire", "Cabo Verde", "Cambodia", "Cameroon", "Canada",
+"Burundi", "Ivory Coast", "Cabo Verde", "Cambodia", "Cameroon", "Canada",
 "Central African Republic","Chad", "Chile", "China", "Colombia", "Comoros",
-"Congo (Congo-Brazzaville)","Costa Rica","Croatia","Cuba","Cyprus","Czechia (Czech Republic)","Democratic Republic of the Congo","Denmark",
-"Djibouti","Dominica","Dominican Republic","Ecuador","Egypt","El Salvador", "England", "Equatorial Guinea",
-"Eritrea", "Estonia", "Eswatini (fmr. Swaziland)", "Ethiopia", "Fiji", "Finland",
+"Congo","Costa Rica","Croatia","Cuba","Cyprus","Czech Republic","Congo DR","Denmark",
+"Djibouti","Dominica","Dominican Republic","Ecuador","Egypt","El Salvador", "Equatorial Guinea",
+"Eritrea", "Estonia", "Eswatini", "Ethiopia", "Fiji", "Finland",
 "France","Gabon", "Gambia", "Georgia", "Germany", "Ghana",
-"Greece","Grenada","Guatemala","Guinea","Guinea-Bissau","Guyana","Haiti","Holy See",
+"Greece","Grenada","Guatemala","Guinea","Guinea-Bissau","Guyana","Haiti","Vatican",
 "Honduras","Hungary","Iceland","India","Indonesia","Iran","Iraq",
 "Ireland", "Israel", "Italy", "Jamaica", "Japan", "Jordan",
 "Kazakhstan","Kenya", "Kiribati", "Kuwait", "Kyrgyzstan", "Laos",
 "Latvia","Lebanon","Lesotho","Liberia","Libya","Liechtenstein","Lithuania","Luxembourg",
 "Madagascar","Malawi","Malaysia","Maldives","Mali","Malta","Marshall Islands",
 "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco",
-"Mongolia","Montenegro", "Morocco", "Mozambique", "Myanmar (formerly Burma)", "Namibia",
+"Mongolia","Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia",
 "Nauru","Nepal","Netherlands","New Zealand","Nicaragua","Niger","Nigeria","North Korea",
 "North Macedonia","Norway","Oman","Pakistan","Palau","Palestine State","Panama",
 "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal",
@@ -91,39 +95,105 @@ app.get("/:passport/:destination/:departure", function(req, res){
     if (err || !foundItems) {
       res.redirect("/");
     } else {
-      let test_info_bool = false;
-      let test_info = "";
-      let travelBan = !foundItems.no_restrictions.includes(departure);
-      if (foundItems.citizens_accepted && passport === destination) {
-        travelBan = false;
+
+      let citizenship_ok = false;
+      let entry_ok = false;
+      let quarantine_ok = false;
+      let testing_ok = false;
+
+      // Citizenship requirements
+      if (!foundItems.citizenship_blacklist && foundItems.citizenship_whitelist) {
+        if (foundItems.citizenship_whitelist.includes(passport)) {
+          citizenship_ok = true;
+        } else if (foundItems.citizenship_whitelist.includes("EU_members") && EU_members.includes(passport)) {
+          citizenship_ok = true;
+        }
+
       }
-      if (destination == departure) {
-        travelBan = false;
+      // Entry requirements
+      if (!foundItems.entry_blacklist && !foundItems.entry_whitelist) {
+        entry_ok = true;
+      } else if (!foundItems.entry_blacklist && foundItems.entry_whitelist) {
+        if (foundItems.entry_whitelist.includes(departure)) {
+          entry_ok = true;
+        } else if (foundItems.entry_whitelist.includes("EU_members") && EU_members.includes(departure)) {
+          entry_ok = true;
+        } else {
+          entry_ok = false;
+        }
       }
-      if (foundItems.covid_test_on_arrival.includes(departure)) {
-        test_info_bool = true;
-        test_info = foundItems.covid_test_on_arrival_info;
+
+      console.log(citizenship_ok);
+      console.log(entry_ok);
+
+      let travelBan = !citizenship_ok && !entry_ok;
+
+      // Quarantine requirements
+      if (!foundItems.quarantine_blacklist && !foundItems.quarantine_whitelist) {
+        quarantine_ok = true;
+      } else if (!foundItems.quarantine_blacklist && foundItems.quarantine_whitelist) {
+        if (foundItems.quarantine_whitelist.includes(departure)) {
+          quarantine_ok = true;
+        } else if (foundItems.quarantine_whitelist.includes("EU_members") && EU_members.includes(departure)) {
+          quarantine_ok = true;
+        } else {
+          quarantine_ok = false;
+        }
+      } else if (foundItems.quarantine_blacklist && !foundItems.quarantine_whitelist) {
+        if (foundItems.quarantine_blacklist.includes(departure)) {
+          quarantine_ok = false;
+        } else if (foundItems.quarantine_blacklist.includes("EU_members") && EU_members.includes(departure)) {
+          quarantine_ok = false;
+        } else {
+          quarantine_ok = true;
+        }
       }
-      if (foundItems.covid_test_to_board.includes(departure)) {
-        test_info_bool = true;
-        test_info = foundItems.covid_test_to_board_info;
+
+      // Testing requirements
+      if (!foundItems.required_testing_blacklist && !foundItems.required_testing_whitelist) {
+        testing_ok = true;
+      } else if (!foundItems.required_testing_blacklist && foundItems.required_testing_whitelist) {
+        if (foundItems.required_testing_whitelist.includes(departure)) {
+          testing_ok = true;
+        } else if (foundItems.required_testing_whitelist.includes("EU_members") && EU_members.includes(departure)) {
+          testing_ok = true;
+        } else {
+          testing_ok = false;
+        }
+      } else if (foundItems.required_testing_blacklist && !foundItems.required_testing_whitelist) {
+        if (foundItems.required_testing_blacklist.includes(departure)) {
+          testing_ok = false;
+        } else if (foundItems.required_testing_blacklist.includes("EU_members") && EU_members.includes(departure)) {
+          testing_ok = false;
+        } else {
+          testing_ok = true;
+        }
       }
-      if (test_info === "") {
-        test_info = "You do not need a COVID-19 test to enter " + destination + "."
+
+      let quarantine_info = "";
+      if (quarantine_ok) {
+        quarantine_info = "You will not need to quarantine on arrival."
+      } else {
+        quarantine_info = foundItems.quarantine_message;
       }
+      let testing_info = "";
+      if (testing_ok) {
+        testing_info = "You will not need to get tested before departure."
+      } else {
+        testing_info = foundItems.required_testing_message;
+      }
+
       res.render("page", {
         dest: destination,
         passport: passport,
         departure: departure,
         urls: foundItems.links,
         travelBan: travelBan,
-        information: foundItems.info,
-        test_info_bool: test_info_bool,
-        test_info: test_info,
-        exceptions: foundItems.exceptions,
         date: date.getDate(),
-        quarantine_info: foundItems.quarantine_info,
-        flagURL: foundItems.flagURL
+        flagURL: foundItems.flagURL,
+        information: foundItems.info,
+        test_info: testing_info,
+        quarantine_info: quarantine_info
       });
       }
   })
